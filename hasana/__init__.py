@@ -89,7 +89,7 @@ class masana(object):
             #https://book.pythontips.com/en/latest/for_-_else.html
             for proj in self.projects:
                 if proj['name'] == project:
-                    found == proj
+                    found = proj
                     break
             else:
                 found = self.add_project(project)
