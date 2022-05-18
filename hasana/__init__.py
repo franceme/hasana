@@ -19,10 +19,11 @@ class masana(object):
         
         self.added_tasks = {}
         self._tags = []
+        self._projects = []
         
         #https://developers.asana.com/docs/custom-fields
         #self._priority = []
-        if project_choice:
+        if project_choice and workspace_choice:
             self.current_workspace = [x for x in list(self.client.workspaces.find_all()) if x['name'] == workspace_choice][0]
             self.workspace = self.current_workspace['gid']
             
@@ -30,6 +31,9 @@ class masana(object):
                 'workspace':self.workspace
             })) if x['name'] == project_choice][0]
             self.project = self.current_project['gid']
+        elif workspace_choice:
+            self.current_workspace = [x for x in list(self.client.workspaces.find_all()) if x['name'] == workspace_choice][0]
+            self.workspace = self.current_workspace['gid']
 
     def pick_workspace(self, choice:int):
         self.current_workspace = list(self.client.workspaces.find_all())[choice]
@@ -61,6 +65,35 @@ class masana(object):
         self._tags += [tag]
         return tag
 
+    @property
+    def projects(self):
+        if self._projects == []:
+            self._projects = list(self.client.projects.get_projects(self.workspace))
+        return self._projects
+
+    def add_project(self, project:str):
+        result = self.client.projects.create_project({
+            'name':project,
+            'public':False,
+            'owner':self.user,
+            'default_view':'list'
+        })
+        self._projects += [result]
+        return result
+    def get_project(self,project:str):
+        #https://developers.asana.com/docs/get-multiple-projects
+        if self.current_workspace != None:
+            found = None
+            for proj in self.projects:
+                if proj['name'] == project:
+                    found == proj
+            
+            if found is None:
+                found = self.create_project(project)
+            return found
+        return None
+            
+
     def pick_project_string(self,choice:str):
         #https://developers.asana.com/docs/get-multiple-projects
         if self.current_workspace != None:
@@ -74,7 +107,6 @@ class masana(object):
             if project is not None:
                 self.current_project = project
                 self.project = project['gid']
-                
         return self.current_project
     def pick_project(self,choice:int):
         if self.current_workspace != None:
@@ -139,8 +171,8 @@ class masana(object):
             except Exception as e:
                 print(f"!!Exception {e}")
                 pass
-    def add_task(self, name:str, notes:str=None, due_day:str=None, sub_task_from:int=None, tags=[]):
-        if self.current_workspace == None or self.current_project == None:
+    def add_task(self, name:str, notes:str=None, due_day:str=None, sub_task_from:int=None, tags=[], projects=[]):
+        if self.current_workspace == None or (self.current_project == None and projects == []):
             return None
         
         if due_day is not None:
@@ -174,6 +206,8 @@ class masana(object):
                 #https://developers.asana.com/docs/create-a-tag
                 self.client.tags.create_tag(self.workspace, tag)
 
+        current_projects = [self.project] if self.project is not None else [self.get_project(x) for x in projects]
+
         if sub_task_from is not None:
             #https://developers.asana.com/docs/create-a-subtask
             try:
@@ -183,7 +217,7 @@ class masana(object):
                     'approval_status': 'pending',
                     'notes':notes,
                     'workspace':self.workspace,
-                    'projects': [self.project],
+                    'projects': current_projects,
                     'due_at':due_date
                 }, opt_fields=['gid'])
                 task = self.client.tasks.get_task(task_id['gid'])
@@ -202,7 +236,7 @@ class masana(object):
                        'assignee':self.user,
                        'name':     name,
                        'notes':    notes,
-                       'projects': [self.project],
+                       'projects': current_projects,
                        'due_at':due_date
                     },
                     opt_fields=['gid']
@@ -251,15 +285,15 @@ class masana(object):
             self.added_tasks[task['gid']] = task
 
         return task
-    def add_task_nextdays(self, name:str, notes:str=None, in_x_days:int=None, due_day:datetime=None, sub_task_from:int=None, tags=[]):
+    def add_task_nextdays(self, name:str, notes:str=None, in_x_days:int=None, due_day:datetime=None, sub_task_from:int=None, tags=[], projects=[]):
         current_day = datetime.datetime.utcnow()
         if due_day is None:
             due_day = current_day
         
         nice_day = due_day.replace(day=current_day + datetime.timedelta(days=in_x_days))
 
-        return self.add_task(name=name, notes=notes, due_day=nice_day,sub_task_from=sub_task_from, tags=tags)
-    def add_reoccuring_task(self, name:str, notes:str=None, for_x_days:int=None, until:str=None, due_date:datetime=None, sub_task_from:int=None, tags=[], hour:int=None,minute:int=0,second:int=0):
+        return self.add_task(name=name, notes=notes, due_day=nice_day,sub_task_from=sub_task_from, tags=tags, projects=projects)
+    def add_reoccuring_task(self, name:str, notes:str=None, for_x_days:int=None, until:str=None, due_date:datetime=None, sub_task_from:int=None, tags=[], projects=[], hour:int=None,minute:int=0,second:int=0):
         output = []
 
         if due_date is None:
@@ -287,7 +321,7 @@ class masana(object):
         for day in range_of_days:
             if True:
                 output += [
-                    self.add_task(name=name, notes=notes, due_day=day,sub_task_from=sub_task_from, tags=tags)
+                    self.add_task(name=name, notes=notes, due_day=day,sub_task_from=sub_task_from, tags=tags,projects=projects)
                 ]
                 waiting = 5
                 print(f"Waiting for {waiting} seconds")
