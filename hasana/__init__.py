@@ -5,7 +5,7 @@ from six import print_
 import funbelts as ut
 
 class masana(object):
-    def __init__(self,access_token:str=None,project_choice:str=None, workspace_choice:str="Personal"):
+    def __init__(self,access_token:str=None,workspace_choice:str="Personal", project_choice:str=None):
         self.client = asana.Client.access_token(access_token)
 
         self.current_project = None
