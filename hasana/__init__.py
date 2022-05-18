@@ -68,7 +68,7 @@ class masana(object):
     @property
     def projects(self):
         if self._projects == []:
-            self._projects = list(self.client.projects.get_projects(self.workspace))
+            self._projects = list(self.client.projects.get_projects({'workspace':self.workspace}))
         return self._projects
 
     def add_project(self, project:str):
