@@ -86,11 +86,12 @@ class masana(object):
         #https://developers.asana.com/docs/get-multiple-projects
         if self.current_workspace != None:
             found = None
+            #https://book.pythontips.com/en/latest/for_-_else.html
             for proj in self.projects:
                 if proj['name'] == project:
                     found == proj
-            
-            if found is None:
+                    break
+            else:
                 found = self.add_project(project)
             return found
         return None
