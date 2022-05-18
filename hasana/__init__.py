@@ -90,7 +90,7 @@ class masana(object):
                     found == proj
             
             if found is None:
-                found = self.create_project(project)
+                found = self.add_project(project)
             return found
         return None
             
