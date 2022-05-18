@@ -209,7 +209,7 @@ class masana(object):
                 #https://developers.asana.com/docs/create-a-tag
                 self.client.tags.create_tag(self.workspace, tag)
 
-        current_projects = [self.project] if self.project is not None else [self.get_project(x) for x in projects]
+        current_projects = [self.project] if self.project is not None else [self.get_project(x)['gid'] for x in projects]
 
         if sub_task_from is not None:
             #https://developers.asana.com/docs/create-a-subtask
