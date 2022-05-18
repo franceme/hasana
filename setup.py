@@ -18,7 +18,7 @@ except:
 # region Basic Information
 here = os.path.abspath(os.path.dirname(__file__))
 py_version = sys.version_info[:2]
-NAME = "asana"
+NAME = "hasana"
 AUTHOR = 'Miles Frantz'
 EMAIL = 'frantzme@vt.edu'
 DESCRIPTION = 'My short description for my project.'
@@ -28,7 +28,7 @@ long_description = pathlib.Path(f"{here}/README.md").read_text(encoding='utf-8')
 REQUIRES_PYTHON = '>=3.8.0'
 RELEASE = "?"
 entry_point = f"{NAME}.{NAME}"
-VERSION = "0.0.4"
+VERSION = "0.0.5"
 
 def grab_version(update_patch:bool=False,update_minor:bool=False,update_major:bool=False):
 	update = any([update_patch,update_minor,update_major])
