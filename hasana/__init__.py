@@ -77,7 +77,8 @@ class masana(object):
             'name':project,
             'public':False,
             'owner':self.user,
-            'default_view':'list'
+            'default_view':'list',
+            'workspace':self.workspace
         })
         self._projects += [result]
         return result
