@@ -55,7 +55,8 @@ class masana(object):
 
     def add_tag(self, string_name):
         tag = self.client.tags.create_tag({
-            'name':string_name
+            'name':string_name,
+            'workspace':self.workspace
         })
         self._tags += [tag]
         return tag
