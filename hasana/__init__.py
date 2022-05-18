@@ -72,6 +72,7 @@ class masana(object):
         return self._projects
 
     def add_project(self, project:str):
+        #https://developers.asana.com/docs/create-a-project
         result = self.client.projects.create_project({
             'name':project,
             'public':False,
