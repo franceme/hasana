@@ -149,7 +149,7 @@ class masana(object):
         #https://developers.asana.com/docs/get-a-task
         output = []
         for x in tasks:
-            output += [self.client.tasks.get_task(x)]
+            output += [self.client.tasks.get_task(x['gid'])]
             if waiting > 0:
                 print(".",end='',flush=True)
                 time.sleep(waiting)
