@@ -193,10 +193,10 @@ class masana(object):
 
                     due_time = f"{due_time.hour + hours}:{due_time.minute}:{due_time.second}.000"
                 else:
-                    due_time = "22:00:00.000"
+                    due_time = "22:00:00"
 
             #http://strftime.net/
-            due_date = f"{due_day.strftime('%Y-%m-%dT%H:%M:%S.%fZ')}"
+            due_date = f"{due_day.strftime('%Y-%m-%dT%H:%M:%SZ')}"
         else:
             due_date = None
         
@@ -223,7 +223,7 @@ class masana(object):
                     'notes':notes,
                     'workspace':self.workspace,
                     'projects': [x['gid'] for x in parent_task['projects']],
-                    'due_at':datetime.strptime(parent_task['due_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
+                    'due_at':datetime.strptime(parent_task['due_at'], '%Y-%m-%dT%H:%M:%SZ')
                 }, opt_fields=['gid'])
                 task = self.client.tasks.get_task(task_id['gid'])
                 self.add_tags_to_task(task_id['gid'], tags)
