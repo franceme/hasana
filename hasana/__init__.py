@@ -212,6 +212,7 @@ class masana(object):
         current_projects = [self.project] if self.project is not None else [self.get_project(x)['gid'] for x in projects]
 
         if sub_task_from is not None:
+            print(f"Looking for parent: {sub_task_from['gid']}")
             parent_task = self.client.tasks.get_task(sub_task_from)
 
             #https://developers.asana.com/docs/create-a-subtask
