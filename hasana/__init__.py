@@ -196,7 +196,7 @@ class masana(object):
                     due_time = "22:00:00.000"
 
             #http://strftime.net/
-            due_date = f"{due_day.strftime('%Y-%m-%dT%H:%M:%SZ')}"
+            due_date = f"{due_day.strftime('%Y-%m-%dT%H:%M:%S.%fZ')}"
         else:
             due_date = None
         
@@ -212,6 +212,8 @@ class masana(object):
         current_projects = [self.project] if self.project is not None else [self.get_project(x)['gid'] for x in projects]
 
         if sub_task_from is not None:
+            parent_task = self.client.tasks.get_task(sub_task_from)
+
             #https://developers.asana.com/docs/create-a-subtask
             try:
                 task_id = self.client.tasks.create_subtask_for_task(sub_task_from,{
@@ -220,8 +222,8 @@ class masana(object):
                     'approval_status': 'pending',
                     'notes':notes,
                     'workspace':self.workspace,
-                    'projects': current_projects,
-                    'due_at':due_date
+                    'projects': [x['gid'] for x in parent_task['projects']],
+                    'due_at':datetime.strptime(parent_task['due_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
                 }, opt_fields=['gid'])
                 task = self.client.tasks.get_task(task_id['gid'])
                 self.add_tags_to_task(task_id['gid'], tags)
@@ -296,7 +298,7 @@ class masana(object):
         nice_day = due_day.replace(day=current_day + datetime.timedelta(days=in_x_days))
 
         return self.add_task(name=name, notes=notes, due_day=nice_day,sub_task_from=sub_task_from, tags=tags, projects=projects)
-    def add_reoccuring_task(self, name:str, notes:str=None, for_x_days:int=None, until:str=None, due_date:datetime=None, sub_task_from:int=None, tags=[], projects=[], hour:int=None,minute:int=0,second:int=0):
+    def add_reoccuring_task(self, name:str, notes:str=None, for_x_days:int=None, until:str=None, due_date:datetime=None, sub_task_from:int=None, tags=[], projects=[], hour:int=None,minute:int=0,second:int=0, waiting:int=5):
         output = []
 
         if due_date is None:
@@ -326,7 +328,6 @@ class masana(object):
                 output += [
                     self.add_task(name=name, notes=notes, due_day=day,sub_task_from=sub_task_from, tags=tags,projects=projects)
                 ]
-                waiting = 5
                 print(f"Waiting for {waiting} seconds")
                 time.sleep(waiting)
             else:
