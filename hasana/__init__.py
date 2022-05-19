@@ -224,7 +224,7 @@ class masana(object):
                     'notes':notes,
                     'workspace':self.workspace,
                     'projects': [x['gid'] for x in parent_task['projects']],
-                    'due_at':sub.strptime(parent_task['due_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
+                    'due_at':sub.strptime(parent_task['due_at'], '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%Y-%m-%dT%H:%M:%SZ')
                 }, opt_fields=['gid'])
                 task = self.client.tasks.get_task(task_id['gid'])
                 self.add_tags_to_task(task_id['gid'], tags)
