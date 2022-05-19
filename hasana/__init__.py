@@ -175,7 +175,7 @@ class masana(object):
                 print(f"!!Exception {e}")
                 pass
     def add_task(self, name:str, notes:str=None, due_day:str=None, sub_task_from:int=None, tags=[], projects=[]):
-        if self.current_workspace == None or (self.current_project == None and projects == []):
+        if self.current_workspace == None or (self.current_project == None and projects == [] and sub_task_from == None):
             return None
         
         if due_day is not None:
