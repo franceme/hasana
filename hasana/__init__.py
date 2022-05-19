@@ -134,6 +134,24 @@ class masana(object):
             return []
         return list(self.client.tasks.get_tasks_for_project(self.project))
 
+    def get_tasks(self, project:str=None):
+        if self.current_workspace == None:
+            return []
+        #https://developers.asana.com/docs/get-multiple-tasks
+        if project == None:
+            tasks = list(self.client.tasks.get_tasks({
+                'workspace':self.workspace,
+                'assignee':self.user
+            }))
+        else:
+            tasks = list(self.client.tasks.get_tasks_for_project(self.project))
+
+        #https://developers.asana.com/docs/get-a-task
+        return [
+                self.client.tasks.get_task(x) for x in tasks
+        ]
+
+
     def add_tags_to_task(self,taskid,tags=[]):
         """
         for tag in tags:
