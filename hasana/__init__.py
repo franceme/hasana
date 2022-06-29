@@ -21,6 +21,8 @@ class masana(object):
         self.added_tasks = {}
         self._tags = []
         self._projects = []
+        self._tasks = []
+        self._full_tasks = []
         
         #https://developers.asana.com/docs/custom-fields
         #self._priority = []
@@ -129,14 +131,19 @@ class masana(object):
     def delete(self, task_id):
         self.client.tasks.delete_task(task_id)
 
-    def tasks(self):
+    def tasks(self, refresh:bool=False, search_lambda:None):
         if self.current_workspace == None or self.current_project == None:
-            return []
-        return list(self.client.tasks.get_tasks_for_project(self.project))
+            self._tasks = []
+        elif self._tasks == [] or refresh:
+            self._tasks = list(self.client.tasks.get_tasks_for_project(self.project))
+        return self._tasks
 
     def get_tasks(self, project:str=None, waiting:int=1):
         if self.current_workspace == None:
             return []
+        elif self._full_tasks != []:
+            return self._full_tasks
+
         #https://developers.asana.com/docs/get-multiple-tasks
         if project == None:
             tasks = list(self.client.tasks.get_tasks({
@@ -147,13 +154,13 @@ class masana(object):
             tasks = list(self.client.tasks.get_tasks_for_project(self.project))
 
         #https://developers.asana.com/docs/get-a-task
-        output = []
         for x in tasks:
-            output += [self.client.tasks.get_task(x['gid'])]
+            if search_lambda is None or search_lambda(x):
+                self._full_tasks += [self.client.tasks.get_task(x['gid'])]
             if waiting > 0:
                 print(".",end='',flush=True)
                 time.sleep(waiting)
-        return output
+        return self._full_tasks
         """
         return [
                 self.client.tasks.get_task(x) for x in tasks
