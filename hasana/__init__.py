@@ -120,6 +120,11 @@ class masana(object):
         self.default_project()
     def delete(self, task_id):
         self.client.tasks.delete_task(task_id)
+    def refresh_tasks(self):
+        self.tasks(refresh=True)
+    @property
+    def mytasks(self):
+        return self.tasks()
     def tasks(self, refresh:bool=False, search_lambda:None):
         if self.current_workspace == None or self.current_project == None:
             self._tasks = []
