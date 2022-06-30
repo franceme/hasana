@@ -28,7 +28,7 @@ long_description = pathlib.Path(f"{here}/README.md").read_text(encoding='utf-8')
 REQUIRES_PYTHON = '>=3.8.0'
 RELEASE = "?"
 entry_point = f"{NAME}.{NAME}"
-VERSION = "0.0.28"
+VERSION = "0.0.31"
 
 def grab_version(update_patch:bool=False,update_minor:bool=False,update_major:bool=False):
 	update = any([update_patch,update_minor,update_major])
@@ -65,7 +65,7 @@ if selfArg('install'):
 	sys.exit(os.system('python3 -m pip install -e .'))
 elif selfArg('upload'):
 	grab_version(True)
-	sys.exit(os.system(f"{sys.executable} setup.py sdist && {sys.executable} -m twine upload --skip-existing dist/*"))
+	sys.exit(os.system(f"{sys.executable} -m pip install twine && {sys.executable} setup.py sdist && {sys.executable} -m twine upload --skip-existing dist/*"))
 # endregion
 # region Setup
 
