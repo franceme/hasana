@@ -368,3 +368,12 @@ class masana(object):
             else:
                 print(day)
         return output
+        def easy_add_reoccurring_tasks(self,name:str,notes:str=None,pandas_daterange=None, tags=[], projects=[], waiting:int=5):
+            output = []
+            for day in pandas_daterange:
+                output += [
+                    self.add_task(name=name, notes=notes, due_day=day,sub_task_from=sub_task_from, tags=tags,projects=projects)
+                ]
+                print(f"Waiting for {waiting} seconds")
+                time.sleep(waiting)
+            return output
