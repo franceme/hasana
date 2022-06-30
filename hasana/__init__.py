@@ -346,7 +346,7 @@ class masana(object):
             local = datetime.datetime.now()
             utc = datetime.datetime.utcnow()
             diff = int((local - utc).days * 86400 + round((local - utc).seconds, -1))
-            sdate=sdate.replace(hour=hour+diff+4)
+            sdate=sdate.replace(hour=hour+diff)
         if minute is not None:
             sdate=sdate.replace(minute=minute)
         if second is not None:
