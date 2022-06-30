@@ -137,6 +137,15 @@ class masana(object):
         elif self._tasks == [] or refresh:
             self._tasks = list(self.client.tasks.get_tasks_for_project(self.project))
         return self._tasks
+    
+    def add_project_to_task(self, task_gid:int, project_strings=None):
+        if task_gid is None or project_strings is None:
+            return False
+        for string in project_strings:
+            if project := self.get_project(string):
+                self.client.add_project_for_task(task_gid, project['gid'])
+        return True
+
 
     def get_tasks(self, project:str=None, waiting:int=1):
         if self.current_workspace == None:
@@ -166,8 +175,6 @@ class masana(object):
                 self.client.tasks.get_task(x) for x in tasks
         ]
         """
-
-
     def add_tags_to_task(self,taskid,tags=[]):
         """
         for tag in tags:
@@ -321,6 +328,8 @@ class masana(object):
                 print(f"%>Exception {e}")
                 pass
         
+        self.add_project_to_task(task['gid'], projects)
+
         if task is not None:
             self.added_tasks[task['gid']] = task
 
