@@ -37,14 +37,12 @@ class masana(object):
         elif workspace_choice:
             self.current_workspace = [x for x in list(self.client.workspaces.find_all()) if x['name'] == workspace_choice][0]
             self.workspace = self.current_workspace['gid']
-
     def pick_workspace(self, choice:int):
         self.current_workspace = list(self.client.workspaces.find_all())[choice]
         self.workspace = self.current_workspace['gid']
         return self.current_workspace
     def default_workspace(self):
         return self.pick_workspace(0)
-
     """
     @property
     def priorities(self):
@@ -53,13 +51,11 @@ class masana(object):
             self._priority = [x for x in list(self.client.custom_fields.get_custom_fields_for_workspace(self.workspace)) if x['name'] == 'Priority']['enum_options']
         return self._priority
     """
-
     @property
     def tags(self):
         if self._tags == []:
             self._tags = list(self.client.tags.get_tags_for_workspace(self.workspace))
         return self._tags
-
     def add_tag(self, string_name):
         tag = self.client.tags.create_tag({
             'name':string_name,
@@ -67,13 +63,11 @@ class masana(object):
         })
         self._tags += [tag]
         return tag
-
     @property
     def projects(self):
         if self._projects == []:
             self._projects = list(self.client.projects.get_projects({'workspace':self.workspace}))
         return self._projects
-
     def add_project(self, project:str):
         #https://developers.asana.com/docs/create-a-project
         result = self.client.projects.create_project({
@@ -98,8 +92,6 @@ class masana(object):
                 found = self.add_project(project)
             return found
         return None
-            
-
     def pick_project_string(self,choice:str):
         #https://developers.asana.com/docs/get-multiple-projects
         if self.current_workspace != None:
@@ -123,21 +115,17 @@ class masana(object):
         return self.current_project
     def default_project(self):
         return self.pick_project(0)
-
     def defaults(self):
         self.default_workspace()
         self.default_project()
-
     def delete(self, task_id):
         self.client.tasks.delete_task(task_id)
-
     def tasks(self, refresh:bool=False, search_lambda:None):
         if self.current_workspace == None or self.current_project == None:
             self._tasks = []
         elif self._tasks == [] or refresh:
             self._tasks = list(self.client.tasks.get_tasks_for_project(self.project))
         return self._tasks
-    
     def add_project_to_task(self, task_gid:int, project_strings=None):
         if task_gid is None or project_strings is None:
             return False
@@ -145,8 +133,6 @@ class masana(object):
             if project := self.get_project(string):
                 self.client.add_project_for_task(task_gid, project['gid'])
         return True
-
-
     def get_tasks(self, project:str=None, waiting:int=1):
         if self.current_workspace == None:
             return []
