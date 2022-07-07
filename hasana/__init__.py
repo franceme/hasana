@@ -166,7 +166,7 @@ class masana(object):
                 if log:
                     print('[',end='',flush=True)
                 for task in self.full_tasks(fields=['due_at','due_on','completed'],log=log):
-                    if date.replace(hour=0,minute=0).isoformat() < task['due_at'] < date.isoformat():
+                    if date.replace(hour=0,minute=0) < task['due_at'] < date.isoformat():
                         if to_work_on and not task['completed']:
                             output += [task]
                         else:
