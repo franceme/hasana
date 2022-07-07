@@ -121,16 +121,32 @@ class masana(object):
     def delete(self, task_id):
         self.client.tasks.delete_task(task_id)
     def refresh_tasks(self):
-        self.tasks(refresh=True)
+        self.tasks(True)
     @property
     def mytasks(self):
-        return self.tasks()
-    def tasks(self, refresh:bool=False, search_lambda:None):
+        return self.tasks(False)
+    def tasks(self, refresh:bool):
         if self.current_workspace == None or self.current_project == None:
             self._tasks = []
         elif self._tasks == [] or refresh:
             self._tasks = list(self.client.tasks.get_tasks_for_project(self.project))
         return self._tasks
+    def tasks_by_date(self, date:datetime.datetime, log=False):
+        #https://developers.asana.com/docs/search-tasks-in-a-workspace
+        """
+        https://stackoverflow.com/questions/2150739/iso-time-iso-8601-in-python
+        https://stackoverflow.com/questions/4460698/python-convert-string-representation-of-date-to-iso-8601
+        """
+        output = []
+        try:
+            output = self.client.tasks.search_tasks_for_workspace(self.current_workspace, {
+                'due_on': str(date.replace(microsecond=0).isoformat())
+            })
+        except Exception as e:
+            if log:
+                print(e)
+            pass
+        return output
     def add_project_to_task(self, task_gid:int, project_strings=None):
         if task_gid is None or project_strings is None:
             return False
@@ -155,8 +171,7 @@ class masana(object):
 
         #https://developers.asana.com/docs/get-a-task
         for x in tasks:
-            if search_lambda is None or search_lambda(x):
-                self._full_tasks += [self.client.tasks.get_task(x['gid'])]
+            self._full_tasks += [self.client.tasks.get_task(x['gid'])]
             if waiting > 0:
                 print(".",end='',flush=True)
                 time.sleep(waiting)
@@ -285,21 +300,8 @@ class masana(object):
             if task_id is None:
                 return None
 
-            if False: #Just in case manually searching searching
-                task = None
-                try:
-                    for found_task in tasks:
-                        found_task = self.client.tasks.get_task(look_task['gid'])
-                        if look_task['resource_type'] == 'task' and look_task['name'] == name and found_task['notes'] == notes:
-                            task = found_task
-                except Exception as e:
-                    print(f"?Exception {e}")
-                    pass
-                if task is None:
-                    return None
-            else:
-                print(f"Current Task ID {task_id}")
-                task = self.client.tasks.get_task(task_id)
+            print(f"Current Task ID {task_id}")
+            task = self.client.tasks.get_task(task_id)
 
             #https://developers.asana.com/docs/update-a-task
             try:
