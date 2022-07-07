@@ -131,22 +131,57 @@ class masana(object):
         elif self._tasks == [] or refresh:
             self._tasks = list(self.client.tasks.get_tasks_for_project(self.project))
         return self._tasks
-    def tasks_by_date(self, date:datetime.datetime, log=False):
-        #https://developers.asana.com/docs/search-tasks-in-a-workspace
+    def full_tasks(self, fields=[], log=False):
+        try:
+            return list(self.client.tasks.get_tasks({
+                'assignee': self.user,
+                'workspace':self.workspace,
+                'opt_fields':fields
+            }))
+        except Exception as e:
+            if log:
+                print(e)
+            return []
+    def tasks_by_date(self, date:datetime.datetime, to_work_on=True,log=False):
         """
+        https://developers.asana.com/docs/search-tasks-in-a-workspace
+
         https://stackoverflow.com/questions/2150739/iso-time-iso-8601-in-python
         https://stackoverflow.com/questions/4460698/python-convert-string-representation-of-date-to-iso-8601
         """
         output = []
         try:
-            output = self.client.tasks.search_tasks_for_workspace(self.current_workspace, {
-                'due_on': str(date.replace(microsecond=0).isoformat())
-            })
+            if log:
+                print("Looking for dasks due by " + date.isoformat())
+            
+            if False: #SEARCH IS PREMIUM ONLY
+                output = list(self.client.tasks.search_tasks_for_workspace(self.workspace, {
+                    'due_by': str(date.isoformat())
+                }))
+            else:
+                #https://developers.asana.com/docs/get-multiple-tasks
+                """
+                Mass getting and manually filtering
+                """
+                if log:
+                    print('[',end='',flush=True)
+                for task in self.full_tasks(fields=['due_at','due_on','completed'],log=log):
+                    if date.replace(hour=0,minute=0).isoformat() < task['due_at'] < date.isoformat():
+                        if to_work_on and not task['completed']:
+                            output += [task]
+                        else:
+                            output += [task]
+                    if log:
+                        print('.',end='',flush=True)
+                if log:
+                    print(']',flush=True)
         except Exception as e:
             if log:
                 print(e)
             pass
         return output
+    def tasks_by_tonight(self, log=False):
+        return self.tasks_by_date(date=datetime.datetime.now().replace(hour=23,minute=59),to_work_on=True,log=log)
     def add_project_to_task(self, task_gid:int, project_strings=None):
         if task_gid is None or project_strings is None:
             return False
