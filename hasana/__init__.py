@@ -226,7 +226,11 @@ class masana(object):
             return False
         for string in project_strings:
             if project := self.get_project(string):
-                self.client.add_project_for_task(task_gid, project['gid'])
+                try:
+                    self.client.add_project_for_task(task_gid, project['gid'])
+                except Exception as e:
+                    print('Issue '+str(e))
+                    pass
         return True
     def get_tasks(self, project:str=None, waiting:int=1):
         if self.current_workspace == None:
