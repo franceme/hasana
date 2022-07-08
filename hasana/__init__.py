@@ -2,8 +2,12 @@ from __future__ import print_function
 import os, sys, pwd, json, asana, datetime,time
 from datetime import date, timedelta
 from datetime import datetime as sub
+from dateutil.parser import *
+import pytz
 from six import print_
 import funbelts as ut
+
+est =  pytz.timezone('US/Eastern')
 
 class masana(object):
     def __init__(self,access_token:str=None,workspace_choice:str="Personal", project_choice:str=None):
@@ -166,7 +170,26 @@ class masana(object):
                 if log:
                     print('[',end='',flush=True)
                 for task in self.full_tasks(fields=['due_at','due_on','completed'],log=log):
-                    if date.replace(hour=0,minute=0) < task['due_at'] < date.isoformat():
+                    date = date.astimezone(est)
+
+                    if task['due_on'] is not None:
+                        #due_on = sub.strptime(task['due_on'], '%Y-%m-%d')
+                        due_on = parse(task['due_on']).astimezone(est) #.strptime(task['due_on'], '%Y-%m-%d')
+                    else:
+                        due_on = None
+                    if task['due_at'] is not None:
+                        due_at = parse(task['due_at']).astimezone(est) #, 'Y-%m-%dT%H:%M:%S.%fZ')##'%Y-%m-%dT%H:%M:%S.000')
+                        #due_at = sub.fromisoformat(task['due_at'])#strptime(task['due_at'], '%Y-%m-%dT%H:%M:%S.000')
+                    else:
+                        due_at = None
+                    """
+                    datetime. strptime(date_time_str, '%d/%m/%y %H:%M:%S')
+                    """
+                    if (
+                            (due_at is not None and date.replace(hour=0,minute=0) < due_at < date)
+                            or 
+                            (due_on is not None and date.replace(hour=0,minute=0,second=0) <= due_on <= date)
+                        ):
                         if to_work_on and not task['completed']:
                             output += [task]
                         else:
@@ -182,6 +205,8 @@ class masana(object):
         return output
     def tasks_by_tonight(self, log=False):
         return self.tasks_by_date(date=datetime.datetime.now().replace(hour=23,minute=59),to_work_on=True,log=log)
+    def task_by_id(self, id):
+        return self.client.tasks.get_task(id)
     def add_project_to_task(self, task_gid:int, project_strings=None):
         if task_gid is None or project_strings is None:
             return False
@@ -262,7 +287,7 @@ class masana(object):
             return None
         
         if due_day is not None:
-            current_date = str(datetime.datetime.utcnow().isoformat()).split('T')[0]
+            current_date = str(est.localize(datetime.datetime.utcnow()).isoformat()).split('T')[0]
             due_day = due_day or current_date
 
             if False:
@@ -279,7 +304,7 @@ class masana(object):
                     due_time = "22:00:00"
 
             #http://strftime.net/
-            due_date = f"{due_day.strftime('%Y-%m-%dT%H:%M:%SZ')}"
+            due_date = f"{est.localize(due_day).strftime('%Y-%m-%dT%H:%M:%SZ')}"
         else:
             due_date = None
         
