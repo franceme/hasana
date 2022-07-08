@@ -146,7 +146,7 @@ class masana(object):
             if log:
                 print(e)
             return []
-    def tasks_by_date(self, date:datetime.datetime, to_work_on=True,log=False):
+    def tasks_by_date(self, date:datetime.datetime, completed=False,log=False):
         """
         https://developers.asana.com/docs/search-tasks-in-a-workspace
 
@@ -167,9 +167,10 @@ class masana(object):
                 """
                 Mass getting and manually filtering
                 """
+                flag = False
                 if log:
                     print('[',end='',flush=True)
-                for task in self.full_tasks(fields=['due_at','due_on','completed'],log=log):
+                for itr, task in enumerate(self.full_tasks(fields=['due_at','due_on','completed'],log=log)):
                     date = date.astimezone(est)
 
                     if task['due_on'] is not None:
@@ -190,9 +191,9 @@ class masana(object):
                             or 
                             (due_on is not None and date.replace(hour=0,minute=0,second=0) <= due_on <= date)
                         ):
-                        if to_work_on and not task['completed']:
-                            output += [task]
-                        else:
+                        if not flag:
+                            flag = True
+                        if completed is None or completed == task['completed']:
                             output += [task]
                     if log:
                         print('.',end='',flush=True)
@@ -204,7 +205,7 @@ class masana(object):
             pass
         return output
     def tasks_by_tonight(self, log=False):
-        return self.tasks_by_date(date=datetime.datetime.now().replace(hour=23,minute=59),to_work_on=True,log=log)
+        return self.tasks_by_date(date=datetime.datetime.now().replace(hour=23,minute=59),completed=False,log=log)
     def task_by_id(self, id):
         return self.client.tasks.get_task(id)
     def add_project_to_task(self, task_gid:int, project_strings=None):
