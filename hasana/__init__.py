@@ -208,6 +208,19 @@ class masana(object):
         return self.tasks_by_date(date=datetime.datetime.now().replace(hour=23,minute=59),completed=False,log=log)
     def task_by_id(self, id):
         return self.client.tasks.get_task(id)
+    def complete_task(self,id,log=False):
+        #https://developers.asana.com/docs/update-a-task
+        output = False
+        try:
+            self.client.tasks.update_task(id,{
+                'completed':True
+            })
+        except Exception as e:
+            if log:
+                print(e)
+            pass
+        return output
+
     def add_project_to_task(self, task_gid:int, project_strings=None):
         if task_gid is None or project_strings is None:
             return False
