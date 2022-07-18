@@ -94,7 +94,7 @@ class masana(object):
                 found = self.add_project(project)
             return found
         return None
-    def del_project(self,project:str=None,project_gid:num=None, log:bool=False):
+    def del_project(self,project:str=None,project_gid=None, log:bool=False):
         """
         https://developers.asana.com/docs/delete-a-project
         """
