@@ -27,10 +27,10 @@ jobs:
         repo-token: ${{ secrets.GH_TOKEN }}
 
     - name: Build the executable
-      run: python3 -m pip install twine && python3 setup.py sdist && ./setup.py patch
+      run: python3 -m pip install twine && python3 setup.py sdist
 
     - name: Publish a Python distribution to PyPI
-      if: false #and github.event_name == 'push'
+      if: github.event_name == 'push'
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
