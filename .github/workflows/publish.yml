@@ -19,7 +19,7 @@ jobs:
       run: python3 -m pip install twine && python3 setup.py sdist && ./setup.py patch
 
     - name: Publish a Python distribution to PyPI
-      if: github.event_name == 'push'
+      #if: github.event_name == 'push'
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
