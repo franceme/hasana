@@ -11,20 +11,10 @@ jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
-
-    - uses: pocket-apps/action-update-version@v1
-      with:
-        files: 'setup.py'
-        version-regexp: '\d+.\d+.\d+'
-        repo-token: ${{ secrets.GH_TOKEN }}
 
     - name: Build the executable
       run: python3 -m pip install twine && python3 setup.py sdist
