@@ -47,14 +47,12 @@ class masana(object):
         return self.current_workspace
     def default_workspace(self):
         return self.pick_workspace(0)
-    """
     @property
-    def priorities(self):
+    def old_priorities(self):
         if self._priority == []:
             #https://developers.asana.com/docs/get-a-workspaces-custom-fields
             self._priority = [x for x in list(self.client.custom_fields.get_custom_fields_for_workspace(self.workspace)) if x['name'] == 'Priority']['enum_options']
         return self._priority
-    """
     @property
     def tags(self):
         if self._tags == []:
@@ -85,7 +83,7 @@ class masana(object):
         return result
     def get_project(self,project:str):
         #https://developers.asana.com/docs/get-multiple-projects
-        if self.current_workspace != None:
+        if project is not None and self.current_workspace != None:
             found = None
             #https://book.pythontips.com/en/latest/for_-_else.html
             for proj in self.projects:
@@ -96,6 +94,21 @@ class masana(object):
                 found = self.add_project(project)
             return found
         return None
+    def del_project(self,project:str=None,project_gid:num=None, log:bool=False):
+        """
+        https://developers.asana.com/docs/delete-a-project
+        """
+        current_project = self.get_project(project)
+        if current_project and not project_gid:
+            project_gid = current_project['gid']
+
+        if project_gid is not None:
+            self.client.projects.delete_project(project_gid)
+            return True
+        else:
+            if log:
+                print("No Project information is passed")
+            return False
     def pick_project_string(self,choice:str):
         #https://developers.asana.com/docs/get-multiple-projects
         if self.current_workspace != None:
@@ -220,14 +233,18 @@ class masana(object):
                 print(e)
             pass
         return output
-
     def add_project_to_task(self, task_gid:int, project_strings=None):
         if task_gid is None or project_strings is None:
             return False
         for string in project_strings:
             if project := self.get_project(string):
                 try:
-                    self.client.add_project_for_task(task_gid, project['gid'])
+                    """
+                    https://developers.asana.com/docs/add-a-project-to-a-task
+                    """
+                    self.client.tasks.add_project_for_task(task_gid, {
+                        'project':project['gid']
+                    })
                 except Exception as e:
                     print('Issue '+str(e))
                     pass
@@ -322,7 +339,10 @@ class masana(object):
                     due_time = "22:00:00"
 
             #http://strftime.net/
-            due_date = f"{est.localize(due_day).strftime('%Y-%m-%dT%H:%M:%SZ')}"
+            try:
+                due_date = f"{est.localize(due_day).strftime('%Y-%m-%dT%H:%M:%SZ')}"
+            except:
+                due_date = f"{due_day.strftime('%Y-%m-%dT%H:%M:%SZ')}"
         else:
             due_date = None
         
