@@ -81,6 +81,13 @@ class masana(object):
         })
         self._projects += [result]
         return result
+    def get_tasks_from_project(self, project_gid, log:bool=False):
+        output = []
+        if project_gid:
+            output = self.client.tasks.get_tasks_for_project(project_gid)
+        elif log:
+            print("Project gid is empty")
+        return output
     def get_project(self,project:str):
         #https://developers.asana.com/docs/get-multiple-projects
         if project is not None and self.current_workspace != None:

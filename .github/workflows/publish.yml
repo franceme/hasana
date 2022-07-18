@@ -27,6 +27,7 @@ jobs:
 
 
     - uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
+      if: false
       with:
         add: 'setup.py'
         author_name: franceme
