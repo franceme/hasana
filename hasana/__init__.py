@@ -156,6 +156,10 @@ class masana(object):
             self._tasks = list(self.client.tasks.get_tasks_for_project(self.project))
         return self._tasks
     def full_tasks(self, fields=[], log=False):
+        """
+        https://github.com/Asana/python-asana/blob/master/asana/resources/gen/tasks.py
+        https://developers.asana.com/docs/get-multiple-tasks
+        """
         try:
             return list(self.client.tasks.get_tasks({
                 'assignee': self.user,
