@@ -56,9 +56,9 @@ class masana(object):
         return self.pick_workspace(0)
     @property
     def old_priorities(self):
-        if self._priority == []:
+        #if self._priority == []:
             #https://developers.asana.com/docs/get-a-workspaces-custom-fields
-            self._priority = [x for x in list(self.client.custom_fields.get_custom_fields_for_workspace(self.workspace)) if x['name'] == 'Priority']['enum_options']
+            #self._priority = [x for x in list(self.client.custom_fields.get_custom_fields_for_workspace(self.workspace)) if x['name'] == 'Priority']['enum_options']
         return self._priority
     @property
     def tags(self):
