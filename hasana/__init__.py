@@ -44,6 +44,10 @@ class masana(object):
         elif workspace_choice:
             self.current_workspace = [x for x in list(self.client.workspaces.find_all()) if x['name'] == workspace_choice][0]
             self.workspace = self.current_workspace['gid']
+    def complete_old_tasks(self, up_to_date:sub.now()):
+        for task in self.full_tasks(['assignee', 'due_on']):
+            if task['gid'] == self.user and sub.strptime(task['due_on'], '%Y-%m-%d') < up_to_date:
+                self.complete_task(task['gid'])
     def pick_workspace(self, choice:int):
         self.current_workspace = list(self.client.workspaces.find_all())[choice]
         self.workspace = self.current_workspace['gid']
