@@ -9,6 +9,9 @@ import funbelts as ut
 
 est =  pytz.timezone('US/Eastern')
 
+#https://developers.asana.com/docs/create-a-task
+#Custom Fields/Opt_Fields   
+
 class masana(object):
     def __init__(self,access_token:str=None,workspace_choice:str="Personal", project_choice:str=None):
         self.client = asana.Client.access_token(access_token)
