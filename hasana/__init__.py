@@ -231,6 +231,17 @@ class masana(object):
                 print(e)
             pass
         return output
+    def get_task_detail(self, task_id):
+        #
+        return self.client.tasks.get_task(task_id,opt_fields = [
+            'name',
+            'description',
+            'resource_subtype',
+            'assignee_status',
+            'completed',
+            'due_at',
+            'due_on',
+        ])
     def tasks_by_tonight(self, fields=[],log=False):
         return self.tasks_by_date(date=datetime.datetime.now().replace(hour=23,minute=59),completed=False,fields=fields,log=log)
     def task_by_id(self, id):
