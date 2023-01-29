@@ -236,6 +236,10 @@ class masana(object):
         return self.client.tasks.get_task(task_id,opt_fields = [
             'name',
             'description',
+            'notes',
+            'projects',
+            'workspace',
+            'html_notes',
             'resource_subtype',
             'assignee_status',
             'completed',
