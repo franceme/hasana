@@ -1,13 +1,44 @@
 from __future__ import print_function
-import os, sys, pwd, json, asana, datetime,time
+import os, sys, pwd, json, asana, datetime,time,string,pytz,base64
 from datetime import date, timedelta
 from datetime import datetime as sub
 from dateutil.parser import *
-import pytz
+from zlib import compress
 from six import print_
 import funbelts as ut
 
+import six
+if six.PY2:
+	from string import maketrans
+else:
+	maketrans = bytes.maketrans
+
 est =  pytz.timezone('US/Eastern')
+
+##Stub of encapsulating a diagram to pass to kroki
+##Kroki Live Editor isn't capable of large form gantt charts
+def kroki_wrap(content):
+    import sys, base64, zlib
+    return base64.urlsafe_b64encode(zlib.compress(content.encode('utf-8'), 9)).decode('ascii')
+
+def kroki_gantt(content):
+    return "https://kroki.io/mermaid/svg/{0}".format(kroki_wrap(content))
+
+def plant(plantuml_text, _type='svg'):
+		base = f'''https://www.plantuml.com/plantuml/{_type}/'''
+
+		plantuml_alphabet = string.digits + string.ascii_uppercase + string.ascii_lowercase + '-_'
+		base64_alphabet   = string.ascii_uppercase + string.ascii_lowercase + string.digits + '+/'
+		b64_to_plantuml = maketrans(base64_alphabet.encode('utf-8'), plantuml_alphabet.encode('utf-8'))
+
+		"""zlib compress the plantuml text and encode it for the plantuml server.
+		"""
+		zlibbed_str = compress(plantuml_text.encode('utf-8'))
+		compressed_string = zlibbed_str[2:-4]
+		return base+base64.b64encode(compressed_string).translate(b64_to_plantuml).decode('utf-8')
+
+def plant_gantt(content):
+    return plant(content + "\n@endgantt")
 
 #https://developers.asana.com/docs/create-a-task
 #Custom Fields/Opt_Fields   
@@ -30,6 +61,7 @@ class masana(object):
         self._projects = []
         self._tasks = []
         self._full_tasks = []
+        self._detailed_tasks = []
         
         #https://developers.asana.com/docs/custom-fields
         #self._priority = []
@@ -75,7 +107,7 @@ class masana(object):
     @property
     def projects(self):
         if self._projects == []:
-            self._projects = list(self.client.projects.get_projects({'workspace':self.workspace}))
+            self._projects = list(self.client.projects.get_projects({'workspace':self.workspace},opt_fields=['name']))
         return self._projects
     def add_project(self, project:str):
         #https://developers.asana.com/docs/create-a-project
@@ -131,8 +163,7 @@ class masana(object):
                 'workspace': self.workspace
             }):
                 if proj['name'] == choice:
-                    project == proj
-
+                    project = proj
             if project is not None:
                 self.current_project = project
                 self.project = project['gid']
@@ -173,6 +204,14 @@ class masana(object):
             if log:
                 print(e)
             return []
+    @property
+    def clearcache(self):
+        self._detailed_tasks = []
+    @property
+    def taskz(self):
+        if self._detailed_tasks is None or self._detailed_tasks == []:
+            self._detailed_tasks = [self.get_task_detail(x['gid']) for x in self.full_tasks()]
+        return self._detailed_tasks
     def tasks_by_date(self, date:datetime.datetime, completed=False,fields=[],log=False):
         """
         https://developers.asana.com/docs/search-tasks-in-a-workspace
@@ -212,7 +251,7 @@ class masana(object):
                         due_at = None
                     """
                     datetime. strptime(date_time_str, '%d/%m/%y %H:%M:%S')
-                    """
+                    
                     if (
                             (due_at is not None and date.replace(hour=0,minute=0) < due_at < date)
                             or 
@@ -222,6 +261,7 @@ class masana(object):
                             flag = True
                         if completed is None or completed == task['completed']:
                             output += [task]
+                    """
                     if log:
                         print('.',end='',flush=True)
                 if log:
@@ -231,10 +271,37 @@ class masana(object):
                 print(e)
             pass
         return output
+    def get_project_detail(self, proj_id):
+        # Create a Project :> https://developers.asana.com/reference/createproject
+        #https://github.com/Asana/python-asana/blob/master/asana/resources/projects.py#L55
+        try:
+            return self.client.projects.get_project(proj_id, opt_fields = [
+                "name",
+                "string",
+                "color",
+                "current_status",
+                "current_status_update",
+                "default_view",
+                "due_date",
+                "due_on",
+                "html_notes",
+                "is_template",
+                "notes",
+                "public",
+                "start_on",
+                "custom_fields",
+                "followers",
+                "owner",
+                "team",
+            ])
+        except Exception as e:
+            print(e)
+        return []
     def get_task_detail(self, task_id):
         #
-        return self.client.tasks.get_task(task_id,opt_fields = [
+        task = self.client.tasks.get_task(task_id,opt_fields = [
             'name',
+            'owner',
             'description',
             'notes',
             'projects',
@@ -243,11 +310,19 @@ class masana(object):
             'resource_subtype',
             'assignee_status',
             'completed',
+            'created_at',
+            'created_on',
             'due_at',
             'due_on',
         ])
+
+        task['project_details']={}
+        for project in task['projects']:
+            task['project_details'][project['gid']] = self.get_project_detail(project['gid'])
+        
+        return task
     def tasks_by_tonight(self, fields=[],log=False):
-        return self.tasks_by_date(date=datetime.datetime.now().replace(hour=23,minute=59),completed=False,fields=fields,log=log)
+        return None #self.tasks_by_date(date=datetime.datetime.now().replace(hour=23,minute=59),completed=False,fields=fields,log=log)
     def task_by_id(self, id):
         return self.client.tasks.get_task(id)
     def complete_task(self,id,log=False):
@@ -278,6 +353,61 @@ class masana(object):
                     print('Issue '+str(e))
                     pass
         return True
+    def get_tasks_per_project(self,project:str):
+        try:
+            cur_proj = self.pick_project_string(project)
+            output = list(self.client.tasks.get_tasks_for_project(cur_proj['gid']))
+            return output
+        except Exception as e:
+            print(":> "+str(e))
+            return []    
+    def gantturl_per_project(self,project:str,string_date_lambda=None):
+        content = """@startgantt
+title Overall Gantt Chart
+dateFormat YYY-MM-DD"""
+        content = """@startgantt
+"""
+        if project is None:
+            projects = self.projects
+        else:
+            projects = [project]
+        
+        for tproj in projects:
+            content += self.gantt_per_project(tproj,string_date_lambda)
+        
+        return plant_gantt(content) #kroki_gantt(content)
+    def gantt_per_project(self,project:str,string_date_lambda=None):
+        tasks = self.get_tasks_per_project(project)
+        start_date = ""
+        content = """
+section Project {0} Work
+""".format(project.title().replace('-',''))
+        content = """
+-- {0} --
+Project starts <X>
+""".format(project.title().replace('-',''))
+        for task_itr,task in enumerate(tasks):
+            task_detail = self.get_task_detail(task['gid'])
+            created_on = sub.strptime(str(task_detail['created_at']).split('.')[0],'%Y-%m-%dT%H:%M:%S').strftime("%Y-%m-%d")
+            
+            #if task_itr == 0:
+            #    content = content.replace('Project starts <X>','Project starts {0}'.format(created_on))
+
+            if False:
+                content += "{0}  :task{1}, {2} {3}, {4}\n".format(
+                    task['name'],task_itr,'done,' if task_detail['completed'] else '', created_on, task_detail['due_on']
+                )
+            else:
+                if task_detail['due_on'] and task_detail['due_on'].strip() != '' and (string_date_lambda is None or string_date_lambda(task_detail['due_on'])):
+
+                    if start_date == '':
+                        start_date = created_on
+                        content = content.replace('Project starts <X>','Project starts {0}'.format(created_on))
+
+                    content += "[{0}] starts {1}".format(task['name'],created_on) + "\n" + "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
+                
+
+        return str(content) + "\n"
     def get_tasks(self, project:str=None, waiting:int=1):
         if self.current_workspace == None:
             return []
@@ -459,7 +589,7 @@ class masana(object):
         if due_day is None:
             due_day = current_day
         
-        nice_day = due_day.replace(day=current_day + datetime.timedelta(days=in_x_days))
+        #nice_day = due_day.replace(day=current_day + datetime.timedelta(days=in_x_days))
 
         return self.add_task(name=name, notes=notes, due_day=nice_day,sub_task_from=sub_task_from, tags=tags, projects=projects)
     def add_reoccuring_task(self, name:str, notes:str=None, for_x_days:int=None, until:str=None, due_date:datetime=None, sub_task_from:int=None, tags=[], projects=[], hour:int=None,minute:int=0,second:int=0, waiting:int=5):
@@ -475,12 +605,13 @@ class masana(object):
             local = datetime.datetime.now()
             utc = datetime.datetime.utcnow()
             diff = int((local - utc).days * 86400 + round((local - utc).seconds, -1))
-            sdate=sdate.replace(hour=hour+diff)
+            #sdate=sdate.replace(hour=hour+diff)
+        """
         if minute is not None:
             sdate=sdate.replace(minute=minute)
         if second is not None:
             sdate=sdate.replace(second=second)
-
+        """
         if for_x_days is not None:
             edate = sdate + datetime.timedelta(days=for_x_days+1)
         else:

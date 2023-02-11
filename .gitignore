@@ -128,3 +128,23 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+CachedExtensions/
+
+CachedExtensionVSIXs/
+
+User/
+
+Machine/
+
+extensions/
+
+logs/
+
+coder.json
+
+machineid
+
+languagepacks.json
+
+.pytest_cache/
