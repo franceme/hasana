@@ -402,12 +402,18 @@ Project starts <X>
                 if task_detail['due_on'] and task_detail['due_on'].strip() != '' and (string_date_lambda is None or string_date_lambda(task_detail['due_on'])):
 
                     og_content = "[{0}] starts {1}".format(task['name'],created_on) + "\n" + "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
+                    backcontent = "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
 
                     if start_date == '':
                         start_date = created_on
                         content = content.replace('Project starts <X>','Project starts {0}'.format(created_on))
 
-                    content += "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
+                    print(task_detail)
+                    for line in task_detail['note'].split('\n'):
+                        if line.startswith("START="):
+                            created_on = line.replace("START=","")
+
+                    content += "[{0}] starts {1}".format(task['name'],created_on) + "\n" + "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
                 
 
         return str(content) + "\n"
