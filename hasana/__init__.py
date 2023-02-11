@@ -363,6 +363,7 @@ class masana(object):
             return []    
     def gantturl_per_project(self,project:str,string_date_lambda=None):
         content = """@startgantt
+printscale daily zoom 2
 title Overall Gantt Chart
 dateFormat YYY-MM-DD"""
         content = """@startgantt
