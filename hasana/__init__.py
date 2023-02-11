@@ -408,8 +408,7 @@ Project starts <X>
                         start_date = created_on
                         content = content.replace('Project starts <X>','Project starts {0}'.format(created_on))
 
-                    print(task_detail)
-                    for line in task_detail['note'].split('\n'):
+                    for line in task_detail['notes'].split('\n'):
                         if line.startswith("START="):
                             created_on = line.replace("START=","")
 
