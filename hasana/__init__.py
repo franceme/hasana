@@ -387,6 +387,7 @@ section Project {0} Work
 -- {0} --
 Project starts <X>
 """.format(project.title().replace('-',''))
+        list_of_dates = []
         for task_itr,task in enumerate(tasks):
             task_detail = self.get_task_detail(task['gid'])
             created_on = sub.strptime(str(task_detail['created_at']).split('.')[0],'%Y-%m-%dT%H:%M:%S').strftime("%Y-%m-%d")
@@ -408,11 +409,13 @@ Project starts <X>
                         if line.startswith("START="):
                             created_on = line.replace("START=","")
 
-                    if start_date == '':
-                        start_date = created_on
-                        content = content.replace('Project starts <X>','Project starts {0}'.format(created_on))
+                    list_of_dates += [
+                        sub.strptime(created_on, '%y-%m-%d')
+                    ]
 
                     content += "[{0}] starts {1}".format(task['name'],created_on) + "\n" + "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
+
+        content = content.replace('Project starts <X>','Project starts {0}'.format(min(list_of_dates)))
                 
 
         return str(content) + "\n"
