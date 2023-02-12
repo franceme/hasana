@@ -410,7 +410,7 @@ Project starts <X>
                             created_on = line.replace("START=","")
 
                     list_of_dates += [
-                        sub.strptime(created_on, '%y-%m-%d')
+                        sub.strptime(created_on, "%Y-%m-%d")
                     ]
 
                     content += "[{0}] starts {1}".format(task['name'],created_on) + "\n" + "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
