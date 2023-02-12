@@ -386,6 +386,7 @@ section Project {0} Work
         content = """
 -- {0} --
 Project starts <X>
+<TODAY> is colored in salmon
 """.format(project.title().replace('-',''))
         list_of_dates = []
         for task_itr,task in enumerate(tasks):
@@ -416,6 +417,12 @@ Project starts <X>
                     content += "[{0}] starts {1}".format(task['name'],created_on) + "\n" + "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
 
         content = content.replace('Project starts <X>','Project starts {0}'.format(min(list_of_dates).strftime("%Y-%m-%d")))
+        content = content.replace(
+            "<TODAY> is colored in salmon",
+            "{0} is colored in salmon".format(
+                datetime.datetime.now().strftime("%Y-%m-%d")
+            )
+        )
                 
 
         return str(content) + "\n"
