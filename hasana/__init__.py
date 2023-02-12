@@ -298,7 +298,7 @@ class masana(object):
             print(e)
         return []
     def get_task_detail(self, task_id):
-        #
+        #https://developers.asana.com/docs/create-a-task
         task = self.client.tasks.get_task(task_id,opt_fields = [
             'name',
             'owner',
@@ -306,6 +306,7 @@ class masana(object):
             'notes',
             'projects',
             'workspace',
+            'resource_subtype',
             'html_notes',
             'resource_subtype',
             'assignee_status',
@@ -403,8 +404,8 @@ Project starts <X>
             else:
                 if task_detail['due_on'] and task_detail['due_on'].strip() != '' and (string_date_lambda is None or string_date_lambda(task_detail['due_on'])):
 
-                    og_content = "[{0}] starts {1}".format(task['name'],created_on) + "\n" + "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
-                    backcontent = "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
+                    #og_content = "[{0}] starts {1}".format(task['name'],created_on) + "\n" + "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
+                    #backcontent = "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
 
                     for line in task_detail['notes'].split('\n'):
                         if line.startswith("START="):
@@ -414,7 +415,13 @@ Project starts <X>
                         sub.strptime(created_on, "%Y-%m-%d")
                     ]
 
-                    content += "[{0}] starts {1}".format(task['name'],created_on) + "\n" + "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
+                    if task['resource_subtype'].strip() == 'milestone':
+                        content += "[{0}] happens {1}".format(task['name'],task_detail['due_on']) + "\n"
+                    else:
+                        content += "[{0}] starts {1}".format(task['name'],created_on) + "\n" + "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
+
+                    if task_detail['completed']:
+                        content += "[{0}] is 100%% complete".format(task['name']) + "\n"
 
         content = content.replace('Project starts <X>','Project starts {0}'.format(min(list_of_dates).strftime("%Y-%m-%d")))
         content = content.replace(
