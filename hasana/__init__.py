@@ -323,7 +323,34 @@ class masana(object):
         
         return task
     def tasks_by_tonight(self, fields=[],log=False):
-        return None #self.tasks_by_date(date=datetime.datetime.now().replace(hour=23,minute=59),completed=False,fields=fields,log=log)
+        output = []
+        now = datetime.datetime.now(pytz.timezone('US/Eastern'))
+        taskz = self.full_tasks(fields=['due_at','due_on','completed','name','description'],log=log)
+
+        for itr, task in enumerate(taskz):
+            if not task['completed']:
+                due_on, due_at, workingdate = None, None, None
+                try:
+                    due_on = datetime.datetime.strptime(task['due_on'], '%Y-%m-%d')
+                except: pass
+                try:
+                    due_at = datetime.datetime.strptime(
+                        str(task['due_on']).replace('Z',''),
+                        '%Y-%m-%dT%H:%M:%S.%f'
+                    ) #'2023-04-11T09:00:00.000Z'
+                except: pass
+
+                if due_on is not None:
+                    workingdate = due_on
+                elif due_at is not None:
+                    workingdate = due_at
+                else:
+                    break
+        
+                if now.day == workingdate.day and now.month == workingdate.month and now.year == workingdate.year:
+                    output += [task]
+
+        return output
     def task_by_id(self, id):
         return self.client.tasks.get_task(id)
     def complete_task(self,id,log=False):
