@@ -354,7 +354,7 @@ class masana(object):
         return output
 
     def tasks_by_tonight(self, fields=[],log=False):
-        return tasks_in_x_days(fields=fields,log=log)
+        return self.tasks_in_x_days(fields=fields,log=log)
     def task_by_id(self, id):
         return self.client.tasks.get_task(id)
     def complete_task(self,id,log=False):
