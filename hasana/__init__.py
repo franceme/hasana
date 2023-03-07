@@ -322,9 +322,10 @@ class masana(object):
             task['project_details'][project['gid']] = self.get_project_detail(project['gid'])
         
         return task
-    def tasks_by_tonight(self, fields=[],log=False):
+    def tasks_in_x_days(self, xdays=0, fields=[],log=False):
         output = []
         now = datetime.datetime.now(pytz.timezone('US/Eastern'))
+        now = now + datetime.timedelta(days=xdays)
         taskz = self.full_tasks(fields=['due_at','due_on','completed','name','description'],log=log)
 
         for itr, task in enumerate(taskz):
@@ -351,6 +352,9 @@ class masana(object):
                     output += [task]
 
         return output
+
+    def tasks_by_tonight(self, fields=[],log=False):
+        return tasks_in_x_days(fields=fields,log=log)
     def task_by_id(self, id):
         return self.client.tasks.get_task(id)
     def complete_task(self,id,log=False):
