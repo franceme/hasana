@@ -111,14 +111,18 @@ class masana(object):
         return self._projects
     def section_per_project(self, project_gid, name:str=None):
         #https://developers.asana.com/reference/getsectionsforproject
-        tasks = list(self.client.sections.get_sections_for_project(project_gid,opt_fields=['name']))
+        sections = list(self.client.sections.get_sections_for_project(project_gid,opt_fields=['name']))
+        for section in sections:
+            #https://developers.asana.com/reference/gettasksforsection
+            section["tasks"] = [x["gid"] for x in list(self.client.tasks.get_tasks_for_section(section["gid"],opt_fields=['name']))]
+
         if name:
-            for task in tasks:
-                if task["name"] == name:
-                    return task
+            for section in sections:
+                if section["name"] == name:
+                    return section
             return None
         else:
-            return tasks
+            return sections
     def add_project(self, project:str):
         #https://developers.asana.com/docs/create-a-project
         result = self.client.projects.create_project({
@@ -329,20 +333,16 @@ class masana(object):
         ])
 
         task['project_details']={}
+        task["assignee_section"] = ""
         for project in task['projects']:
             project_sections = self.section_per_project(project['gid'])
 
-            cur = self.get_project_detail(project['gid'])
-            task['project_details'][project['gid']] = cur
+            task['project_details'][project['gid']] = self.get_project_detail(project['gid'])
             
-            if "assignee_section" in cur and cur["assignee_section"] != {}:
-                for project_section in project_sections:
-                    if cur["assignee_section"]["gid"] == project_section["gid"]:
-                        task['project_details'][project['gid']]["assignee_section"] = project_section["name"]
-                        break
-
-            if "assignee_section" not in task['project_details'][project['gid']] or not isinstance(task['project_details'][project['gid']]["assignee_section"], str):
-                task['project_details'][project['gid']]["assignee_section"] = ""
+            for project_section in project_sections:
+                if task["gid"] in project_section["tasks"]:
+                    task["assignee_section"] = project_section["name"]
+                    break
         
         return task
     def tasks_in_x_days(self, xdays=0, fields=[],log=False):
