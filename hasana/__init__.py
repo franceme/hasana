@@ -479,7 +479,7 @@ Project starts <X>
                             content += "[{0}] is 100%% complete".format(task['name']) + "\n"
 
         if len(list_of_dates) == 0:
-            list_of_dates += [datetime.datetime.now().strftime("%Y-%m-%d")]
+            list_of_dates += [datetime.datetime.now()]
 
         content = content.replace('Project starts <X>','Project starts {0}'.format(min(list_of_dates).strftime("%Y-%m-%d")))
         content = content.replace(
