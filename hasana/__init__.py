@@ -340,6 +340,9 @@ class masana(object):
                     if cur["assignee_section"]["gid"] == project_section["gid"]:
                         task['project_details'][project['gid']]["assignee_section"] = project_section["name"]
                         break
+
+            if "assignee_section" not in task['project_details'][project['gid']] or not isinstance(task['project_details'][project['gid']]["assignee_section"], str):
+                task['project_details'][project['gid']]["assignee_section"] = ""
         
         return task
     def tasks_in_x_days(self, xdays=0, fields=[],log=False):
