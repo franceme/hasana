@@ -109,6 +109,16 @@ class masana(object):
         if self._projects == []:
             self._projects = list(self.client.projects.get_projects({'workspace':self.workspace},opt_fields=['name']))
         return self._projects
+    def section_per_project(self, project_gid, name:str=None):
+        #https://developers.asana.com/reference/getsectionsforproject
+        tasks = list(self.client.projects.get_sections_for_project(project_gid,opt_fields=['name']))
+        if name:
+            for task in tasks:
+                if task["name"] == name:
+                    return task
+            return None
+        else:
+            return tasks
     def add_project(self, project:str):
         #https://developers.asana.com/docs/create-a-project
         result = self.client.projects.create_project({
@@ -320,7 +330,14 @@ class masana(object):
 
         task['project_details']={}
         for project in task['projects']:
+            project_sections = self.section_per_project(project['gid'])
+
             task['project_details'][project['gid']] = self.get_project_detail(project['gid'])
+
+            for project_section in project_sections:
+                if task['project_details'][project['gid']]["assignee_section"]["gid"] == project_section["gid"]:
+                    task['project_details'][project['gid']]["assignee_section"] = project_section["name"]
+                    break
         
         return task
     def tasks_in_x_days(self, xdays=0, fields=[],log=False):
