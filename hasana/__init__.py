@@ -332,12 +332,14 @@ class masana(object):
         for project in task['projects']:
             project_sections = self.section_per_project(project['gid'])
 
-            task['project_details'][project['gid']] = self.get_project_detail(project['gid'])
-
-            for project_section in project_sections:
-                if task['project_details'][project['gid']]["assignee_section"]["gid"] == project_section["gid"]:
-                    task['project_details'][project['gid']]["assignee_section"] = project_section["name"]
-                    break
+            cur = self.get_project_detail(project['gid'])
+            task['project_details'][project['gid']] = cur
+            
+            if "assignee_section" in cur and cur["assignee_section"] != {}:
+                for project_section in project_sections:
+                    if cur["assignee_section"]["gid"] == project_section["gid"]:
+                        task['project_details'][project['gid']]["assignee_section"] = project_section["name"]
+                        break
         
         return task
     def tasks_in_x_days(self, xdays=0, fields=[],log=False):
