@@ -334,15 +334,17 @@ class masana(object):
 
         task['project_details']={}
         task["assignee_section"] = ""
+
         for project in task['projects']:
             project_sections = self.section_per_project(project['gid'])
 
             task['project_details'][project['gid']] = self.get_project_detail(project['gid'])
             
-            for project_section in project_sections:
-                if task["gid"] in project_section["tasks"]:
-                    task["assignee_section"] = project_section["name"]
-                    break
+            if task["assignee_section"] == "":
+                for project_section in project_sections:
+                    if task["gid"] in project_section["tasks"] and "Untitled" not in project_section["name"]:
+                        task["assignee_section"] = project_section["name"]
+                        break
         
         return task
     def tasks_in_x_days(self, xdays=0, fields=[],log=False):
