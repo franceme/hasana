@@ -310,6 +310,7 @@ class masana(object):
             'html_notes',
             'resource_subtype',
             'assignee_status',
+            'assignee_section',
             'completed',
             'created_at',
             'created_on',
@@ -393,7 +394,7 @@ class masana(object):
         except Exception as e:
             print(":> "+str(e))
             return []    
-    def gantturl_per_project(self,project:str,string_date_lambda=None):
+    def gantturl_per_project(self,project:str,string_date_lambda=None, task_specify_lambda=None):
         content = """@startgantt
 title Overall Gantt Chart
 dateFormat YYY-MM-DD"""
@@ -406,10 +407,10 @@ printscale daily zoom 2
             projects = [project]
         
         for tproj in projects:
-            content += self.gantt_per_project(tproj,string_date_lambda)
+            content += self.gantt_per_project(tproj,string_date_lambda, task_specify_lambda)
         
         return plant_gantt(content) #kroki_gantt(content)
-    def gantt_per_project(self,project:str,string_date_lambda=None):
+    def gantt_per_project(self,project:str,string_date_lambda=None, task_specify_lambda=None):
         tasks = self.get_tasks_per_project(project)
         start_date = ""
         content = """
@@ -423,36 +424,37 @@ Project starts <X>
         list_of_dates = []
         for task_itr,task in enumerate(tasks):
             task_detail = self.get_task_detail(task['gid'])
-            created_on = sub.strptime(str(task_detail['created_at']).split('.')[0],'%Y-%m-%dT%H:%M:%S').strftime("%Y-%m-%d")
-            
-            #if task_itr == 0:
-            #    content = content.replace('Project starts <X>','Project starts {0}'.format(created_on))
+            if task_specify_lambda is None or task_specify_lambda(task_detail):
+                created_on = sub.strptime(str(task_detail['created_at']).split('.')[0],'%Y-%m-%dT%H:%M:%S').strftime("%Y-%m-%d")
+                
+                #if task_itr == 0:
+                #    content = content.replace('Project starts <X>','Project starts {0}'.format(created_on))
 
-            if False:
-                content += "{0}  :task{1}, {2} {3}, {4}\n".format(
-                    task['name'],task_itr,'done,' if task_detail['completed'] else '', created_on, task_detail['due_on']
-                )
-            else:
-                if task_detail['due_on'] and task_detail['due_on'].strip() != '' and (string_date_lambda is None or string_date_lambda(task_detail['due_on'])):
+                if False:
+                    content += "{0}  :task{1}, {2} {3}, {4}\n".format(
+                        task['name'],task_itr,'done,' if task_detail['completed'] else '', created_on, task_detail['due_on']
+                    )
+                else:
+                    if task_detail['due_on'] and task_detail['due_on'].strip() != '' and (string_date_lambda is None or string_date_lambda(task_detail['due_on'])):
 
-                    #og_content = "[{0}] starts {1}".format(task['name'],created_on) + "\n" + "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
-                    #backcontent = "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
+                        #og_content = "[{0}] starts {1}".format(task['name'],created_on) + "\n" + "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
+                        #backcontent = "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
 
-                    for line in task_detail['notes'].split('\n'):
-                        if line.startswith("START="):
-                            created_on = line.replace("START=","")
+                        for line in task_detail['notes'].split('\n'):
+                            if line.startswith("START="):
+                                created_on = line.replace("START=","")
 
-                    list_of_dates += [
-                        sub.strptime(created_on, "%Y-%m-%d")
-                    ]
+                        list_of_dates += [
+                            sub.strptime(created_on, "%Y-%m-%d")
+                        ]
 
-                    if task['resource_subtype'].strip() == 'milestone':
-                        content += "[{0}] happens {1}".format(task['name'],task_detail['due_on']) + "\n"
-                    else:
-                        content += "[{0}] starts {1}".format(task['name'],created_on) + "\n" + "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
+                        if task['resource_subtype'].strip() == 'milestone':
+                            content += "[{0}] happens {1}".format(task['name'],task_detail['due_on']) + "\n"
+                        else:
+                            content += "[{0}] starts {1}".format(task['name'],created_on) + "\n" + "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
 
-                    if task_detail['completed']:
-                        content += "[{0}] is 100%% complete".format(task['name']) + "\n"
+                        if task_detail['completed']:
+                            content += "[{0}] is 100%% complete".format(task['name']) + "\n"
 
         content = content.replace('Project starts <X>','Project starts {0}'.format(min(list_of_dates).strftime("%Y-%m-%d")))
         content = content.replace(
