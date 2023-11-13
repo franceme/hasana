@@ -111,7 +111,7 @@ class masana(object):
         return self._projects
     def section_per_project(self, project_gid, name:str=None):
         #https://developers.asana.com/reference/getsectionsforproject
-        tasks = list(self.client.projects.get_sections_for_project(project_gid,opt_fields=['name']))
+        tasks = list(self.client.sections.get_sections_for_project(project_gid,opt_fields=['name']))
         if name:
             for task in tasks:
                 if task["name"] == name:
