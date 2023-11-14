@@ -465,24 +465,28 @@ Project starts <X>
                         #backcontent = "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
 
                         is_milestone = False
+                        is_hidden = False
 
                         for line in task_detail['notes'].split('\n'):
                             if line.startswith("START="):
                                 created_on = line.replace("START=","")
                             elif line.startswith("@MILESTONE"):
                                 is_milestone = True
+                            elif line.startswith("HIDDEN"):
+                                is_hidden = True
 
-                        list_of_dates += [
-                            sub.strptime(created_on, "%Y-%m-%d")
-                        ]
+                        if not is_hidden:
+                            list_of_dates += [
+                                sub.strptime(created_on, "%Y-%m-%d")
+                            ]
 
-                        if task['resource_subtype'].strip() == 'milestone' or is_milestone:
-                            content += "[{0}] happens {1}".format(task['name'],task_detail['due_on']) + "\n"
-                        else:
-                            content += "[{0}] starts {1}".format(task['name'],created_on) + "\n" + "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
+                            if task['resource_subtype'].strip() == 'milestone' or is_milestone:
+                                content += "[{0}] happens {1}".format(task['name'],task_detail['due_on']) + "\n"
+                            else:
+                                content += "[{0}] starts {1}".format(task['name'],created_on) + "\n" + "[{0}] ends {1}".format(task['name'],task_detail['due_on']) + "\n"
 
-                        if task_detail['completed']:
-                            content += "[{0}] is 100%% complete".format(task['name']) + "\n"
+                            if task_detail['completed']:
+                                content += "[{0}] is 100%% complete".format(task['name']) + "\n"
 
         if len(list_of_dates) == 0:
             list_of_dates += [datetime.datetime.now()]
